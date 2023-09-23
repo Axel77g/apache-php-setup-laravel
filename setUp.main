@@ -1,0 +1,56 @@
+#!/bin/bash
+
+# Demandez le nom du site à l'utilisateur
+read -p "Veuillez entrer le nom du site (ex. laravel-immo): " sitename
+
+# Mettez à jour votre système
+sudo apt update
+sudo apt upgrade -y
+
+# Installez Apache, PHP, MariaDB et les dépendances nécessaires
+sudo apt install apache2 php mariadb-server php-mysql php-xml php-mbstring php-json php-zip unzip -y
+
+# Activez Apache au démarrage
+sudo systemctl enable apache2
+
+# Démarrez Apache
+sudo systemctl start apache2
+
+# Installez Composer (gestionnaire de dépendances pour Laravel)
+curl -sS https://getcomposer.org/installer | sudo php -- --install-dir=/usr/local/bin --filename=composer
+
+# Installez Laravel
+cd /var/www
+composer create-project --prefer-dist laravel/laravel $sitename
+
+# Configurez les permissions pour Laravel
+sudo chown -R www-data:www-data /var/www/$sitename
+sudo chmod -R 755 /var/www/$sitename/storage
+
+# Configurez un hôte virtuel Apache pour Laravel
+echo "<VirtualHost *:80>
+    ServerAdmin webmaster@localhost
+    DocumentRoot /var/www/$sitename/public
+
+    <Directory /var/www/$sitename>
+        AllowOverride All
+    </Directory>
+
+    ErrorLog \${APACHE_LOG_DIR}/error.log
+    CustomLog \${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>" | sudo tee /etc/apache2/sites-available/$sitename.conf
+
+# Activez le site Laravel
+sudo a2ensite $sitename.conf
+
+# Redémarrez Apache
+sudo systemctl restart apache2
+
+# Configurez la base de données MariaDB
+sudo mysql_secure_installation
+
+# Suivez les instructions pour sécuriser votre base de données MariaDB
+
+# Vous pouvez maintenant accéder à Laravel en utilisant l'adresse IP de votre serveur dans un navigateur
+
+# Assurez-vous de configurer votre fichier .env de Laravel pour utiliser la base de données MariaDB.
