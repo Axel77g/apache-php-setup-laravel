@@ -9,6 +9,7 @@ sudo apt upgrade -y
 
 # Installez Apache, PHP, MariaDB et les dépendances nécessaires
 sudo apt install apache2 php mariadb-server php-mysql php-xml php-mbstring php-json php-zip unzip -y
+sudo apt install ufw -y
 
 # Activez Apache au démarrage
 sudo systemctl enable apache2
@@ -59,6 +60,18 @@ sudo a2ensite $sitename.conf
 
 # Redémarrez Apache
 sudo systemctl restart apache2
+
+sudo ufw allow OpenSSH
+sudo ufw allow 'Apache Full'
+sudo ufw enable
+sudo ufw status
+
+# Installez Certbot pour Let's Encrypt
+sudo apt install certbot python3-certbot-apache -y
+
+# Obtenez un certificat SSL pour votre site
+sudo certbot --apache
+sudo (crontab -l ; echo "0 0 * * * /usr/bin/certbot renew --quiet") | crontab -
 
 # Configurez la base de données MariaDB
 sudo mysql_secure_installation
